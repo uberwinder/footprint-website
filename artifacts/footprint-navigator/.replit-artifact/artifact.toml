@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Footprint Navigator"
+version = "1.0.0"
+id = "artifacts/footprint-navigator"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 20029
+
+[services.development]
+run = "pnpm --filter @workspace/footprint-navigator run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/footprint-navigator", "run", "build" ]
+publicDir = "artifacts/footprint-navigator/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20029"
+BASE_PATH = "/"
