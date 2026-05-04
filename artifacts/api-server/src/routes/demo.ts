@@ -1,17 +1,39 @@
 import { Router, type IRouter } from "express";
 import { Resend } from "resend";
 import crypto from "crypto";
+import fs from "fs";
+import path from "path";
 
 const router: IRouter = Router();
 
-interface TokenData {
+const STORE_PATH = path.resolve("../../demo-requests.json");
+const ADMIN_KEY = "FootprintAdmin2026";
+
+interface DemoRequest {
   firstName: string;
   lastName: string;
   email: string;
-  expiresAt: number;
+  token: string;
+  requestedAt: string;
+  expiresAt: string;
+  used: boolean;
+  appAccessed: boolean;
 }
 
-const demoTokens = new Map<string, TokenData>();
+function readStore(): DemoRequest[] {
+  try {
+    if (!fs.existsSync(STORE_PATH)) {
+      fs.writeFileSync(STORE_PATH, "[]", "utf-8");
+    }
+    return JSON.parse(fs.readFileSync(STORE_PATH, "utf-8")) as DemoRequest[];
+  } catch {
+    return [];
+  }
+}
+
+function writeStore(requests: DemoRequest[]): void {
+  fs.writeFileSync(STORE_PATH, JSON.stringify(requests, null, 2), "utf-8");
+}
 
 router.post("/demo-request", async (req, res) => {
   const { firstName, lastName, email } = req.body as {
@@ -26,17 +48,50 @@ router.post("/demo-request", async (req, res) => {
   }
 
   const token = crypto.randomBytes(32).toString("hex");
-  const expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000;
+  const requestedAt = new Date();
+  const expiresAtDate = new Date(requestedAt.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-  demoTokens.set(token, { firstName, lastName, email, expiresAt });
+  const record: DemoRequest = {
+    firstName,
+    lastName,
+    email,
+    token,
+    requestedAt: requestedAt.toISOString(),
+    expiresAt: expiresAtDate.toISOString(),
+    used: false,
+    appAccessed: false,
+  };
+
+  const requests = readStore();
+  requests.push(record);
+  writeStore(requests);
 
   const domains = process.env["REPLIT_DOMAINS"]?.split(",")[0];
   const baseUrl = domains ? `https://${domains}` : "https://footprintnavigator.com";
   const demoLink = `${baseUrl}/demo/access?token=${token}`;
 
+  const requestedAtFormatted = requestedAt.toLocaleString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZoneName: "short",
+  });
+
+  const expiresFormatted = expiresAtDate.toLocaleString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZoneName: "short",
+  });
+
   const apiKey = process.env["RESEND_API_KEY"];
   if (!apiKey) {
-    req.log.warn("RESEND_API_KEY not set — skipping email, token stored in memory");
+    req.log.warn("RESEND_API_KEY not set — skipping email, request saved to file");
     res.json({ success: true });
     return;
   }
@@ -66,13 +121,34 @@ router.post("/demo-request", async (req, res) => {
       to: "info@footprintnavigator.com",
       subject: `New Demo Request: ${firstName} ${lastName}`,
       html: `
-        <div style="font-family: Arial, sans-serif; padding: 20px;">
-          <h2>New Demo Request</h2>
-          <p><strong>Name:</strong> ${firstName} ${lastName}</p>
-          <p><strong>Email:</strong> ${email}</p>
-          <p><strong>Token:</strong> ${token}</p>
-          <p><strong>Expires:</strong> ${new Date(expiresAt).toLocaleDateString()}</p>
-          <p><strong>Demo Link:</strong> <a href="${demoLink}">${demoLink}</a></p>
+        <div style="font-family: Arial, sans-serif; padding: 24px; max-width: 600px;">
+          <h2 style="margin-top: 0; color: #007BFF;">New Demo Request</h2>
+          <table style="border-collapse: collapse; width: 100%;">
+            <tr>
+              <td style="padding: 8px 16px 8px 0; font-weight: bold; white-space: nowrap; vertical-align: top;">First Name:</td>
+              <td style="padding: 8px 0;">${firstName}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 16px 8px 0; font-weight: bold; white-space: nowrap; vertical-align: top;">Last Name:</td>
+              <td style="padding: 8px 0;">${lastName}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 16px 8px 0; font-weight: bold; white-space: nowrap; vertical-align: top;">Email:</td>
+              <td style="padding: 8px 0;"><a href="mailto:${email}">${email}</a></td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 16px 8px 0; font-weight: bold; white-space: nowrap; vertical-align: top;">Requested:</td>
+              <td style="padding: 8px 0;">${requestedAtFormatted}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 16px 8px 0; font-weight: bold; white-space: nowrap; vertical-align: top;">Token Expires:</td>
+              <td style="padding: 8px 0;">${expiresFormatted}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 16px 8px 0; font-weight: bold; white-space: nowrap; vertical-align: top;">Demo Link:</td>
+              <td style="padding: 8px 0; word-break: break-all;"><a href="${demoLink}">${demoLink}</a></td>
+            </tr>
+          </table>
         </div>
       `,
     });
@@ -87,24 +163,46 @@ router.post("/demo-request", async (req, res) => {
 router.get("/demo-access", (req, res) => {
   const token = req.query["token"] as string | undefined;
 
-  if (!token || !demoTokens.has(token)) {
+  if (!token) {
     res.status(401).json({ valid: false, error: "Invalid or expired link" });
     return;
   }
 
-  const tokenData = demoTokens.get(token)!;
+  const requests = readStore();
+  const idx = requests.findIndex((r) => r.token === token);
 
-  if (Date.now() > tokenData.expiresAt) {
-    demoTokens.delete(token);
+  if (idx === -1) {
+    res.status(401).json({ valid: false, error: "Invalid or expired link" });
+    return;
+  }
+
+  const record = requests[idx];
+
+  if (Date.now() > new Date(record.expiresAt).getTime()) {
     res.status(401).json({ valid: false, error: "This link has expired" });
     return;
   }
 
+  requests[idx] = { ...record, appAccessed: true };
+  writeStore(requests);
+
   res.json({
     valid: true,
-    firstName: tokenData.firstName,
+    firstName: record.firstName,
     appUrl: "https://footprintnavigator.com/app",
   });
+});
+
+router.get("/admin/requests", (req, res) => {
+  const key = req.query["key"] as string | undefined;
+
+  if (key !== ADMIN_KEY) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+
+  const requests = readStore();
+  res.json(requests);
 });
 
 export default router;
