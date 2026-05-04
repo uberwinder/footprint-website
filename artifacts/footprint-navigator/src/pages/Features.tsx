@@ -8,27 +8,32 @@ export default function Features() {
     {
       title: "AI-Powered Search",
       description: "Find any clause, detail, or requirement across thousands of documents in seconds. Natural language processing understands construction terminology context.",
-      icon: <Zap className="text-primary" size={24} />
+      icon: <Zap className="text-primary" size={24} />,
+      comingSoon: false,
     },
     {
       title: "Cross-Document Intelligence",
-      description: "Automatically surface conflicts, dependencies, and related sections across your entire document library. Catch spec conflicts before they become change orders.",
-      icon: <Database className="text-primary" size={24} />
+      description: "Surface conflicts, dependencies, and related sections across your entire document library. Single document intelligence is live — multi-document support coming soon.",
+      icon: <Database className="text-primary" size={24} />,
+      comingSoon: true,
     },
     {
-      title: "RFI Acceleration",
-      description: "Generate draft RFIs pre-populated with relevant spec sections and drawing references. Track responses and automatically link them back to the source documents.",
-      icon: <FileText className="text-primary" size={24} />
+      title: "Workflow Integrations",
+      description: "Connect Footprint Navigator to your existing tools. API-ready for email, project management platforms, Excel, and construction software. Automate document workflows without changing how your team works.",
+      icon: <FileText className="text-primary" size={24} />,
+      comingSoon: true,
     },
     {
       title: "Role-Based Views",
       description: "Custom dashboards for PMs, supers, estimators, and owners. Everyone sees the information most critical to their specific responsibilities.",
-      icon: <Users className="text-primary" size={24} />
+      icon: <Users className="text-primary" size={24} />,
+      comingSoon: true,
     },
     {
       title: "Audit-Ready History",
       description: "Complete version history and change tracking for every document. Always know who viewed what, when, and what changed between revisions.",
-      icon: <Shield className="text-primary" size={24} />
+      icon: <Shield className="text-primary" size={24} />,
+      comingSoon: true,
     },
   ];
 
@@ -72,7 +77,18 @@ export default function Features() {
                   {feature.icon}
                 </div>
                 <div>
-                  <h3 className="text-2xl font-bold mb-3">{feature.title}</h3>
+                  <div className="flex items-center gap-3 mb-3">
+                    <h3 className="text-2xl font-bold">{feature.title}</h3>
+                    {feature.comingSoon && (
+                      <span
+                        style={{ fontSize: "11px" }}
+                        className="inline-flex items-center rounded-full border border-primary px-2 py-0.5 font-medium text-primary bg-transparent leading-none whitespace-nowrap"
+                        data-testid={`badge-coming-soon-${feature.title.toLowerCase().replace(/\s+/g, "-")}`}
+                      >
+                        Coming Soon
+                      </span>
+                    )}
+                  </div>
                   <p className="text-muted-foreground leading-relaxed text-lg">
                     {feature.description}
                   </p>
