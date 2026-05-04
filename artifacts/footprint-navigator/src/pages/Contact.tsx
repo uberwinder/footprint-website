@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { motion } from "framer-motion";
-import { Mail, MessageSquare, MapPin, CheckCircle2 } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -55,56 +55,9 @@ export default function Contact() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
-            {/* Contact Info */}
-            <div className="lg:col-span-2 space-y-8">
-              <div className="bg-card border border-border/50 rounded-2xl p-8 h-full">
-                <h3 className="text-2xl font-bold mb-8">Contact Information</h3>
-                
-                <div className="space-y-6">
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <Mail className="text-primary" size={20} />
-                    </div>
-                    <div>
-                      <p className="font-semibold mb-1">Sales & Support</p>
-                      <a href="mailto:info@footprintrobotics.com" className="text-muted-foreground hover:text-primary transition-colors">
-                        info@footprintrobotics.com
-                      </a>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <MapPin className="text-primary" size={20} />
-                    </div>
-                    <div>
-                      <p className="font-semibold mb-1">Headquarters</p>
-                      <p className="text-muted-foreground">
-                        San Francisco, CA<br />
-                        United States
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <MessageSquare className="text-primary" size={20} />
-                    </div>
-                    <div>
-                      <p className="font-semibold mb-1">Working Hours</p>
-                      <p className="text-muted-foreground">
-                        Monday - Friday<br />
-                        9:00 AM - 6:00 PM PST
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
+          <div className="max-w-2xl mx-auto">
             {/* Contact Form */}
-            <div className="lg:col-span-3">
+            <div>
               <div className="bg-card border border-border/50 rounded-2xl p-8 md:p-10">
                 {isSuccess ? (
                   <motion.div 
