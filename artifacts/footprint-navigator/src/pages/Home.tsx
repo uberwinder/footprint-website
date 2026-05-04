@@ -39,7 +39,7 @@ export default function Home() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="text-lg md:text-xl text-muted-foreground max-w-2xl mb-10"
           >
-            Footprint Navigator transforms document chaos into confident decision-making. Find critical information across RFIs, submittals, specs, and drawings instantly. Tread boldly.
+            Footprint Navigator transforms document chaos into confident decision-making. Find critical information immediately with AI support.
           </motion.p>
           
           <motion.div 
@@ -55,30 +55,6 @@ export default function Home() {
               <Link href="/signup">Sign Up</Link>
             </Button>
           </motion.div>
-        </div>
-      </section>
-
-      {/* Social Proof Stats */}
-      <section className="w-full py-16 bg-card border-y border-border/40">
-        <div className="container mx-auto px-4 md:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 text-center">
-            <div className="space-y-2">
-              <h3 className="text-4xl font-bold text-primary">73%</h3>
-              <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Reduction in RFI Time</p>
-            </div>
-            <div className="space-y-2">
-              <h3 className="text-4xl font-bold text-primary">$2B+</h3>
-              <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Active Project Value</p>
-            </div>
-            <div className="space-y-2">
-              <h3 className="text-4xl font-bold text-primary">10k+</h3>
-              <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Documents Navigated Daily</p>
-            </div>
-            <div className="space-y-2">
-              <h3 className="text-4xl font-bold text-primary">Top 50</h3>
-              <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Trusted by Leading GCs</p>
-            </div>
-          </div>
         </div>
       </section>
 
