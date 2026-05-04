@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { FileSearch, Layers, Zap, Clock, ShieldCheck, CheckCircle2 } from "lucide-react";
+import logoSrc from "@assets/FootprintLogo3.19.26_1777917913386.png";
 
 export default function Home() {
   return (
@@ -13,6 +14,20 @@ export default function Home() {
         <div className="absolute left-0 right-0 top-0 -z-10 m-auto h-[310px] w-[310px] rounded-full bg-primary opacity-20 blur-[100px]"></div>
         
         <div className="container relative z-10 mx-auto px-4 md:px-8 flex flex-col items-center text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="mb-8"
+          >
+            <img
+              src={logoSrc}
+              alt="Footprint Navigator"
+              style={{ height: "80px", width: "auto" }}
+              data-testid="img-logo-hero"
+            />
+          </motion.div>
+
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
