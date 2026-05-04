@@ -47,10 +47,8 @@ export default function Signup() {
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] bg-background">
-      {/* Left side - Form */}
-      <div className="flex-1 flex items-center justify-center p-8 md:p-12 lg:p-24">
-        <div className="w-full max-w-md">
+    <div className="flex min-h-[calc(100vh-4rem)] bg-background items-center justify-center p-8">
+      <div className="w-full" style={{ maxWidth: "480px", margin: "0 auto" }}>
           <div className="mb-10 text-center sm:text-left">
             <h1 className="text-3xl font-bold mb-3">Create your account</h1>
             <p className="text-muted-foreground">Join thousands of professionals mastering document control.</p>
@@ -158,26 +156,6 @@ export default function Signup() {
               </form>
             </Form>
           )}
-        </div>
-      </div>
-
-      {/* Right side - Testimonial/Graphic */}
-      <div className="hidden lg:flex flex-1 bg-card border-l border-border/40 items-center justify-center p-12 relative overflow-hidden">
-        <div className="absolute top-1/4 left-1/4 w-[400px] h-[400px] bg-primary/10 rounded-full blur-[100px] pointer-events-none"></div>
-        <div className="max-w-md relative z-10">
-          <h2 className="text-3xl font-bold mb-8 leading-tight">
-            "Footprint Navigator reduced our RFI response turnaround from 7 days to 48 hours. It paid for itself on the first project."
-          </h2>
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center border border-primary/30">
-              <span className="font-bold text-primary">MS</span>
-            </div>
-            <div>
-              <p className="font-bold">Michael Sterling</p>
-              <p className="text-sm text-muted-foreground">VP of Operations, BuildGroup</p>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
