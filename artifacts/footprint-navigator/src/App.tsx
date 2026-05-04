@@ -10,6 +10,7 @@ import { Footer } from "@/components/Footer";
 import Home from "@/pages/Home";
 import Features from "@/pages/Features";
 import Demo from "@/pages/Demo";
+import DemoAccess from "@/pages/DemoAccess";
 import Signup from "@/pages/Signup";
 import Contact from "@/pages/Contact";
 
@@ -24,6 +25,7 @@ function Router() {
           <Route path="/" component={Home} />
           <Route path="/features" component={Features} />
           <Route path="/demo" component={Demo} />
+          <Route path="/demo/access" component={DemoAccess} />
           <Route path="/signup" component={Signup} />
           <Route path="/contact" component={Contact} />
           <Route component={NotFound} />

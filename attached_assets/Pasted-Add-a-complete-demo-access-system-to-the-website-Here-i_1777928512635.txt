@@ -1,0 +1,144 @@
+Add a complete demo access system to the website. Here is everything to build:
+
+STEP 1 — INSTALL DEPENDENCIES:
+This project needs a backend. Add and install:
+- express
+- resend
+- crypto (built into Node, no install needed)
+- cors
+- dotenv
+
+Set up an Express server that runs alongside the React frontend.
+
+STEP 2 — BACKEND: CREATE server.js IN THE ROOT:
+
+const express = require('express');
+const { Resend } = require('resend');
+const crypto = require('crypto');
+const cors = require('cors');
+require('dotenv').config();
+
+const app = express();
+const resend = new Resend(process.env.RESEND_API_KEY);
+app.use(cors());
+app.use(express.json());
+
+// In-memory token store for now (replace with DB later)
+const demoTokens = new Map();
+
+app.post('/api/demo-request', async (req, res) => {
+  const { firstName, lastName, email } = req.body;
+  
+  if (!firstName || !lastName || !email) {
+    return res.status(400).json({ error: 'All fields required' });
+  }
+
+  // Generate unique token
+  const token = crypto.randomBytes(32).toString('hex');
+  const expiresAt = Date.now() + (7 * 24 * 60 * 60 * 1000); // 7 days
+  
+  demoTokens.set(token, { firstName, lastName, email, expiresAt, used: false });
+
+  const demoLink = `https://footprintnavigator.com/demo/access?token=${token}`;
+  const appUrl = 'https://footprintnavigator.com/app';
+
+  try {
+    // Email to user
+    await resend.emails.send({
+      from: 'Footprint Navigator <info@footprintnavigator.com>',
+      to: email,
+      subject: 'Your Footprint Navigator Demo Access',
+      html: `
+        <div style="font-family: 'Montserrat', Arial, sans-serif; background: #000; color: #fff; padding: 40px; max-width: 600px; margin: 0 auto;">
+          <img src="https://footprintnavigator.com/FootprintLogo3_19_26.png" height="50" alt="Footprint Navigator" />
+          <h1 style="color: #007BFF; margin-top: 30px;">Tread boldly, ${firstName}.</h1>
+          <p style="font-size: 16px; line-height: 1.6;">Your demo access to Footprint Navigator is ready. Click the button below to launch the app.</p>
+          <a href="${demoLink}" style="display: inline-block; background: #007BFF; color: #fff; padding: 14px 28px; border-radius: 6px; text-decoration: none; font-weight: bold; margin: 20px 0;">Launch Demo</a>
+          <p style="color: #888; font-size: 13px;">This link expires in 7 days. Do not share it.</p>
+          <p style="color: #888; font-size: 13px;">Launching July 1, 2026. Early users who help us test get free access and lifetime discounts.</p>
+          <hr style="border-color: #333; margin: 30px 0;" />
+          <p style="color: #666; font-size: 12px;">© 2026 Footprint Technologies · info@footprintnavigator.com</p>
+        </div>
+      `
+    });
+
+    // Notification email to you
+    await resend.emails.send({
+      from: 'Footprint Navigator <info@footprintnavigator.com>',
+      to: 'info@footprintnavigator.com',
+      subject: `New Demo Request: ${firstName} ${lastName}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px;">
+          <h2>New Demo Request</h2>
+          <p><strong>Name:</strong> ${firstName} ${lastName}</p>
+          <p><strong>Email:</strong> ${email}</p>
+          <p><strong>Token:</strong> ${token}</p>
+          <p><strong>Expires:</strong> ${new Date(expiresAt).toLocaleDateString()}</p>
+          <p><strong>Demo Link:</strong> <a href="${demoLink}">${demoLink}</a></p>
+        </div>
+      `
+    });
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Email error:', err);
+    res.status(500).json({ error: 'Failed to send email' });
+  }
+});
+
+// Token validation endpoint
+app.get('/api/demo-access', (req, res) => {
+  const { token } = req.query;
+  
+  if (!token || !demoTokens.has(token)) {
+    return res.status(401).json({ valid: false, error: 'Invalid or expired link' });
+  }
+
+  const tokenData = demoTokens.get(token);
+  
+  if (Date.now() > tokenData.expiresAt) {
+    demoTokens.delete(token);
+    return res.status(401).json({ valid: false, error: 'This link has expired' });
+  }
+
+  // Return success with app URL
+  res.json({ 
+    valid: true, 
+    firstName: tokenData.firstName,
+    appUrl: 'https://footprintnavigator.com/app'
+  });
+});
+
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => console.log(`Server running on ${PORT}`));
+
+STEP 3 — UPDATE /demo PAGE:
+Replace the current demo page content with:
+
+- Headline: "Request Demo Access"
+- Subheadline: "Footprint Navigator launches July 1, 2026. Request access below and we'll send you a personal demo link instantly."
+- Form with three fields:
+  - First Name
+  - Last Name  
+  - Work Email
+- Submit button: "Get Demo Access" in electric blue
+- On submit: POST to /api/demo-request
+- While submitting: show "Sending..." on button, disable it
+- On success: hide the form and show:
+  "Check your email! We sent a demo link to [email]. It expires in 7 days."
+  In electric blue, centered, with the Footprint logo above it.
+- On error: show error message in red below the button
+
+STEP 4 — CREATE /demo/access PAGE:
+New route in React Router: /demo/access
+This page:
+1. On load, reads the token from the URL query string
+2. Makes a GET request to /api/demo-access?token=[token]
+3. If valid: shows "Welcome, [firstName]! Launching Footprint Navigator..." with a spinner, then redirects to the app URL after 2 seconds
+4. If invalid or expired: shows "This demo link is invalid or has expired. Request a new one." with a button linking back to /demo
+5. Style: dark background, centered, electric blue accents, Footprint logo at top
+
+STEP 5 — ADD DEMO TO NAVBAR:
+Add "Demo" link to the navigation bar pointing to /demo. Navbar should now show: Features, Demo, Signup, Contact.
+
+Do not change any other pages.
