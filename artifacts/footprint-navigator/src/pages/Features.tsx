@@ -15,7 +15,7 @@ export default function Features() {
       title: "Cross-Document Intelligence",
       description: "Surface conflicts, dependencies, and related sections across your entire document library. Single document intelligence is live — multi-document support coming soon.",
       icon: <Database className="text-primary" size={24} />,
-      comingSoon: true,
+      comingSoon: false,
     },
     {
       title: "Workflow Integrations",
@@ -27,12 +27,6 @@ export default function Features() {
       title: "Role-Based Views",
       description: "Custom dashboards for PMs, supers, estimators, and owners. Everyone sees the information most critical to their specific responsibilities.",
       icon: <Users className="text-primary" size={24} />,
-      comingSoon: true,
-    },
-    {
-      title: "Audit-Ready History",
-      description: "Complete version history and change tracking for every document. Always know who viewed what, when, and what changed between revisions.",
-      icon: <Shield className="text-primary" size={24} />,
       comingSoon: true,
     },
   ];
