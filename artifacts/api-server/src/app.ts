@@ -25,7 +25,29 @@ app.use(
     },
   }),
 );
-app.use(cors());
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      const allowed = [
+        "https://footprintnavigator.com",
+        "https://www.footprintnavigator.com",
+        "https://footprint-app-30jy.onrender.com",
+      ];
+      if (
+        !origin ||
+        allowed.includes(origin) ||
+        origin.endsWith(".replit.dev") ||
+        origin.endsWith(".picard.replit.dev")
+      ) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type"],
+  }),
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import logoSrc from "@assets/FootprintLogo3.19.26_1777917913386.png";
+const logoSrc = "/FootprintLogo.png";
 
 export default function Demo() {
   const [firstName, setFirstName] = useState("");
@@ -20,8 +20,8 @@ export default function Demo() {
   const abortRef = useRef<AbortController | null>(null);
 
   function clearTimers() {
-    if (wakingUpTimerRef.current) clearTimeout(wakingUpTimerRef.current);
-    if (timeoutTimerRef.current) clearTimeout(timeoutTimerRef.current);
+    if (wakingUpTimerRef.current) { clearTimeout(wakingUpTimerRef.current); wakingUpTimerRef.current = null; }
+    if (timeoutTimerRef.current) { clearTimeout(timeoutTimerRef.current); timeoutTimerRef.current = null; }
   }
 
   useEffect(() => {
@@ -37,6 +37,7 @@ export default function Demo() {
     setShowWakingUp(false);
     setIsSubmitting(true);
 
+    const submitStartTime = Date.now();
     abortRef.current = new AbortController();
 
     wakingUpTimerRef.current = setTimeout(() => {
@@ -48,13 +49,11 @@ export default function Demo() {
       clearTimers();
       setShowWakingUp(false);
       setIsSubmitting(false);
-      setError(
-        "Something went wrong. Please try again or contact us at info@footprintnavigator.com"
-      );
+      setError("Something went wrong. Please try again or contact us at info@footprintnavigator.com");
     }, 90000);
 
     try {
-      const res = await fetch(`${import.meta.env.BASE_URL}api/demo-request`, {
+      const res = await fetch("https://footprint-api.onrender.com/api/demo-request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ firstName, lastName, email }),
@@ -78,9 +77,13 @@ export default function Demo() {
       if (err instanceof Error && err.name === "AbortError") {
         return;
       }
-      setError("Network error. Please try again.");
+      const elapsed = Date.now() - submitStartTime;
+      if (elapsed < 3000) {
+        setError("Unable to connect. Please try again in a moment — if this keeps happening contact us at info@footprintnavigator.com");
+      } else {
+        setError("Something went wrong. Please try again or contact us at info@footprintnavigator.com");
+      }
     } finally {
-      if (!timeoutTimerRef.current) return;
       setIsSubmitting(false);
     }
   }
@@ -166,7 +169,7 @@ export default function Demo() {
                 <motion.p
                   initial={{ opacity: 0, y: 4 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="text-sm text-center text-muted-foreground"
+                  className="text-sm text-muted-foreground text-center leading-relaxed"
                 >
                   Almost there — our server is waking up. This can take up to 30 seconds on first request.
                 </motion.p>
