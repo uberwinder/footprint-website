@@ -1,51 +1,13 @@
 import { Router, type IRouter } from "express";
 import { Resend } from "resend";
 import crypto from "crypto";
-import fs from "fs";
-import path from "path";
+import { eq } from "drizzle-orm";
+import { db, demoTokensTable } from "@workspace/db";
 import { appendDemoRequestRow } from "../lib/sheets.js";
 
 const router: IRouter = Router();
 
-// Resolve relative to process.cwd() so the path is predictable on any host
-// (Render, Replit, local) regardless of where the built file lives.
-const STORE_PATH = path.resolve(process.cwd(), "demo-tokens.json");
 const ADMIN_KEY = "FootprintAdmin2026";
-
-interface DemoRequest {
-  firstName: string;
-  lastName: string;
-  email: string;
-  token: string;
-  requestedAt: string;
-  expiresAt: string;
-  used: boolean;
-  appAccessed: boolean;
-}
-
-function readStore(): DemoRequest[] {
-  try {
-    if (!fs.existsSync(STORE_PATH)) {
-      fs.writeFileSync(STORE_PATH, "[]", "utf-8");
-      return [];
-    }
-    return JSON.parse(fs.readFileSync(STORE_PATH, "utf-8")) as DemoRequest[];
-  } catch {
-    return [];
-  }
-}
-
-function writeStore(requests: DemoRequest[]): void {
-  fs.writeFileSync(STORE_PATH, JSON.stringify(requests, null, 2), "utf-8");
-}
-
-// Load existing tokens from file on startup so they survive restarts
-let _store: DemoRequest[] = readStore();
-
-function getStore(): DemoRequest[] {
-  _store = readStore();
-  return _store;
-}
 
 router.post("/demo-request", async (req, res) => {
   const { firstName, lastName, email } = req.body as {
@@ -60,24 +22,19 @@ router.post("/demo-request", async (req, res) => {
   }
 
   const token = crypto.randomBytes(32).toString("hex");
-  const requestedAt = new Date();
-  const expiresAtDate = new Date(requestedAt.getTime() + 7 * 24 * 60 * 60 * 1000);
+  const createdAt = new Date();
+  const expiresAt = new Date(createdAt.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-  const record: DemoRequest = {
+  // Persist token to PostgreSQL
+  await db.insert(demoTokensTable).values({
+    token,
+    email,
     firstName,
     lastName,
-    email,
-    token,
-    requestedAt: requestedAt.toISOString(),
-    expiresAt: expiresAtDate.toISOString(),
+    expiresAt,
     used: false,
     appAccessed: false,
-  };
-
-  // Read fresh from disk, append, write back immediately
-  const requests = getStore();
-  requests.push(record);
-  writeStore(requests);
+  });
 
   // Fire-and-forget: append to Google Sheets (never blocks the response)
   const ip =
@@ -85,12 +42,12 @@ router.post("/demo-request", async (req, res) => {
     req.socket.remoteAddress ??
     "";
   appendDemoRequestRow({
-    submittedAt: record.requestedAt,
+    submittedAt: createdAt.toISOString(),
     firstName,
     lastName,
     email,
     token,
-    expiresAt: record.expiresAt,
+    expiresAt: expiresAt.toISOString(),
     ip,
   }).catch((err: unknown) => {
     req.log.error({ err }, "Google Sheets write failed (non-fatal)");
@@ -100,7 +57,7 @@ router.post("/demo-request", async (req, res) => {
   const baseUrl = domains ? `https://${domains}` : "https://footprintnavigator.com";
   const demoLink = `${baseUrl}/demo/access?token=${token}`;
 
-  const requestedAtFormatted = requestedAt.toLocaleString("en-US", {
+  const requestedAtFormatted = createdAt.toLocaleString("en-US", {
     weekday: "long",
     year: "numeric",
     month: "long",
@@ -110,7 +67,7 @@ router.post("/demo-request", async (req, res) => {
     timeZoneName: "short",
   });
 
-  const expiresFormatted = expiresAtDate.toLocaleString("en-US", {
+  const expiresFormatted = expiresAt.toLocaleString("en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",
@@ -121,7 +78,7 @@ router.post("/demo-request", async (req, res) => {
 
   const apiKey = process.env["RESEND_API_KEY"];
   if (!apiKey) {
-    req.log.warn("RESEND_API_KEY not set — skipping email, token saved to file");
+    req.log.warn("RESEND_API_KEY not set — skipping email, token saved to database");
     res.json({ success: true });
     return;
   }
@@ -190,7 +147,7 @@ router.post("/demo-request", async (req, res) => {
   }
 });
 
-router.get("/demo-access", (req, res) => {
+router.get("/demo-access", async (req, res) => {
   const token = req.query["token"] as string | undefined;
 
   if (!token) {
@@ -198,25 +155,29 @@ router.get("/demo-access", (req, res) => {
     return;
   }
 
-  // Always read fresh from disk to survive server restarts
-  const requests = getStore();
-  const idx = requests.findIndex((r) => r.token === token);
+  const rows = await db
+    .select()
+    .from(demoTokensTable)
+    .where(eq(demoTokensTable.token, token))
+    .limit(1);
 
-  if (idx === -1) {
+  if (rows.length === 0) {
     res.status(401).json({ valid: false, error: "Invalid or expired link" });
     return;
   }
 
-  const record = requests[idx];
+  const record = rows[0];
 
   if (Date.now() > new Date(record.expiresAt).getTime()) {
     res.status(401).json({ valid: false, error: "This link has expired" });
     return;
   }
 
-  // Mark as accessed and persist immediately
-  requests[idx] = { ...record, appAccessed: true };
-  writeStore(requests);
+  // Mark as accessed
+  await db
+    .update(demoTokensTable)
+    .set({ appAccessed: true })
+    .where(eq(demoTokensTable.token, token));
 
   res.json({
     valid: true,
@@ -225,7 +186,7 @@ router.get("/demo-access", (req, res) => {
   });
 });
 
-router.get("/admin/requests", (req, res) => {
+router.get("/admin/requests", async (req, res) => {
   const key = req.query["key"] as string | undefined;
 
   if (key !== ADMIN_KEY) {
@@ -233,7 +194,12 @@ router.get("/admin/requests", (req, res) => {
     return;
   }
 
-  res.json(getStore());
+  const rows = await db
+    .select()
+    .from(demoTokensTable)
+    .orderBy(demoTokensTable.createdAt);
+
+  res.json(rows);
 });
 
 export default router;
