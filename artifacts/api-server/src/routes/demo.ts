@@ -26,15 +26,22 @@ router.post("/demo-request", async (req, res) => {
   const expiresAt = new Date(createdAt.getTime() + 7 * 24 * 60 * 60 * 1000);
 
   // Persist token to PostgreSQL
-  await db.insert(demoTokensTable).values({
-    token,
-    email,
-    firstName,
-    lastName,
-    expiresAt,
-    used: false,
-    appAccessed: false,
-  });
+  try {
+    await db.insert(demoTokensTable).values({
+      token,
+      email,
+      firstName,
+      lastName,
+      expiresAt,
+      used: false,
+      appAccessed: false,
+    });
+  } catch (dbErr: unknown) {
+    const msg = dbErr instanceof Error ? dbErr.message : String(dbErr);
+    req.log.error({ dbErr }, "Failed to insert demo token into database");
+    res.status(500).json({ error: "Database error", detail: msg });
+    return;
+  }
 
   // Fire-and-forget: append to Google Sheets (never blocks the response)
   const ip =
@@ -156,11 +163,19 @@ router.get("/demo-access", async (req, res) => {
     return;
   }
 
-  const rows = await db
-    .select()
-    .from(demoTokensTable)
-    .where(eq(demoTokensTable.token, token))
-    .limit(1);
+  let rows;
+  try {
+    rows = await db
+      .select()
+      .from(demoTokensTable)
+      .where(eq(demoTokensTable.token, token))
+      .limit(1);
+  } catch (dbErr: unknown) {
+    const msg = dbErr instanceof Error ? dbErr.message : String(dbErr);
+    req.log.error({ dbErr }, "Failed to query demo token from database");
+    res.status(500).json({ valid: false, error: "Database error", detail: msg });
+    return;
+  }
 
   if (rows.length === 0) {
     res.status(401).json({ valid: false, error: "Invalid or expired link" });
@@ -174,11 +189,14 @@ router.get("/demo-access", async (req, res) => {
     return;
   }
 
-  // Mark as accessed
-  await db
-    .update(demoTokensTable)
-    .set({ appAccessed: true })
-    .where(eq(demoTokensTable.token, token));
+  try {
+    await db
+      .update(demoTokensTable)
+      .set({ appAccessed: true })
+      .where(eq(demoTokensTable.token, token));
+  } catch (dbErr: unknown) {
+    req.log.error({ dbErr }, "Failed to mark token as accessed (non-fatal)");
+  }
 
   res.json({
     valid: true,
@@ -195,12 +213,17 @@ router.get("/admin/requests", async (req, res) => {
     return;
   }
 
-  const rows = await db
-    .select()
-    .from(demoTokensTable)
-    .orderBy(demoTokensTable.createdAt);
-
-  res.json(rows);
+  try {
+    const rows = await db
+      .select()
+      .from(demoTokensTable)
+      .orderBy(demoTokensTable.createdAt);
+    res.json(rows);
+  } catch (dbErr: unknown) {
+    const msg = dbErr instanceof Error ? dbErr.message : String(dbErr);
+    req.log.error({ dbErr }, "Failed to query demo tokens from database");
+    res.status(500).json({ error: "Database error", detail: msg });
+  }
 });
 
 export default router;
