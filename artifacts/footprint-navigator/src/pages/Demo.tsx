@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,20 +13,58 @@ export default function Demo() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [submittedEmail, setSubmittedEmail] = useState("");
   const [error, setError] = useState("");
+  const [showWakingUp, setShowWakingUp] = useState(false);
+
+  const wakingUpTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const timeoutTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+
+  function clearTimers() {
+    if (wakingUpTimerRef.current) clearTimeout(wakingUpTimerRef.current);
+    if (timeoutTimerRef.current) clearTimeout(timeoutTimerRef.current);
+  }
+
+  useEffect(() => {
+    return () => {
+      clearTimers();
+      abortRef.current?.abort();
+    };
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    setShowWakingUp(false);
     setIsSubmitting(true);
+
+    abortRef.current = new AbortController();
+
+    wakingUpTimerRef.current = setTimeout(() => {
+      setShowWakingUp(true);
+    }, 5000);
+
+    timeoutTimerRef.current = setTimeout(() => {
+      abortRef.current?.abort();
+      clearTimers();
+      setShowWakingUp(false);
+      setIsSubmitting(false);
+      setError(
+        "Something went wrong. Please try again or contact us at info@footprintnavigator.com"
+      );
+    }, 90000);
 
     try {
       const res = await fetch(`${import.meta.env.BASE_URL}api/demo-request`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ firstName, lastName, email }),
+        signal: abortRef.current.signal,
       });
 
       const data = await res.json() as { success?: boolean; error?: string };
+
+      clearTimers();
+      setShowWakingUp(false);
 
       if (!res.ok || !data.success) {
         setError(data.error ?? "Something went wrong. Please try again.");
@@ -34,9 +72,15 @@ export default function Demo() {
         setSubmittedEmail(email);
         setIsSuccess(true);
       }
-    } catch {
+    } catch (err: unknown) {
+      clearTimers();
+      setShowWakingUp(false);
+      if (err instanceof Error && err.name === "AbortError") {
+        return;
+      }
       setError("Network error. Please try again.");
     } finally {
+      if (!timeoutTimerRef.current) return;
       setIsSubmitting(false);
     }
   }
@@ -117,6 +161,16 @@ export default function Demo() {
               >
                 {isSubmitting ? "Sending..." : <>Get Demo Access <ChevronRight className="ml-2" size={18} /></>}
               </Button>
+
+              {isSubmitting && showWakingUp && (
+                <motion.p
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-sm text-center text-muted-foreground"
+                >
+                  Almost there — our server is waking up. This can take up to 30 seconds on first request.
+                </motion.p>
+              )}
             </form>
           </>
         )}

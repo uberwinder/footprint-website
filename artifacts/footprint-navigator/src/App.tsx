@@ -13,6 +13,7 @@ import Demo from "@/pages/Demo";
 import DemoAccess from "@/pages/DemoAccess";
 import Signup from "@/pages/Signup";
 import Contact from "@/pages/Contact";
+import Support from "@/pages/Support";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,7 @@ function Router() {
           <Route path="/demo/access" component={DemoAccess} />
           <Route path="/signup" component={Signup} />
           <Route path="/contact" component={Contact} />
+          <Route path="/support" component={Support} />
           <Route component={NotFound} />
         </Switch>
       </main>

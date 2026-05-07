@@ -12,6 +12,7 @@ export function Navbar() {
     { href: "/demo", label: "Demo" },
     { href: "/signup", label: "Signup" },
     { href: "/contact", label: "Contact" },
+    { href: "/support", label: "Support" },
   ];
 
   return (

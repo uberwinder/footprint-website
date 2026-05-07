@@ -189,7 +189,7 @@ router.get("/demo-access", (req, res) => {
   res.json({
     valid: true,
     firstName: record.firstName,
-    appUrl: "https://footprintnavigator.com/app",
+    appUrl: "https://footprint-app-30jy.onrender.com",
   });
 });
 
