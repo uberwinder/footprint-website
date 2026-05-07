@@ -38,8 +38,15 @@ router.post("/demo-request", async (req, res) => {
     });
   } catch (dbErr: unknown) {
     const msg = dbErr instanceof Error ? dbErr.message : String(dbErr);
+    const causeMsg =
+      dbErr instanceof Error && (dbErr as { cause?: unknown }).cause != null
+        ? String(
+            ((dbErr as { cause?: { message?: unknown } }).cause as { message?: unknown })
+              ?.message ?? (dbErr as { cause?: unknown }).cause
+          )
+        : undefined;
     req.log.error({ dbErr }, "Failed to insert demo token into database");
-    res.status(500).json({ error: "Database error", detail: msg });
+    res.status(500).json({ error: "Database error", detail: msg, cause: causeMsg });
     return;
   }
 
