@@ -3,10 +3,13 @@ import { Resend } from "resend";
 import crypto from "crypto";
 import fs from "fs";
 import path from "path";
+import { appendDemoRequestRow } from "../lib/sheets.js";
 
 const router: IRouter = Router();
 
-const STORE_PATH = path.resolve("../../demo-requests.json");
+// Resolve relative to process.cwd() so the path is predictable on any host
+// (Render, Replit, local) regardless of where the built file lives.
+const STORE_PATH = path.resolve(process.cwd(), "demo-tokens.json");
 const ADMIN_KEY = "FootprintAdmin2026";
 
 interface DemoRequest {
@@ -24,6 +27,7 @@ function readStore(): DemoRequest[] {
   try {
     if (!fs.existsSync(STORE_PATH)) {
       fs.writeFileSync(STORE_PATH, "[]", "utf-8");
+      return [];
     }
     return JSON.parse(fs.readFileSync(STORE_PATH, "utf-8")) as DemoRequest[];
   } catch {
@@ -33,6 +37,14 @@ function readStore(): DemoRequest[] {
 
 function writeStore(requests: DemoRequest[]): void {
   fs.writeFileSync(STORE_PATH, JSON.stringify(requests, null, 2), "utf-8");
+}
+
+// Load existing tokens from file on startup so they survive restarts
+let _store: DemoRequest[] = readStore();
+
+function getStore(): DemoRequest[] {
+  _store = readStore();
+  return _store;
 }
 
 router.post("/demo-request", async (req, res) => {
@@ -62,9 +74,27 @@ router.post("/demo-request", async (req, res) => {
     appAccessed: false,
   };
 
-  const requests = readStore();
+  // Read fresh from disk, append, write back immediately
+  const requests = getStore();
   requests.push(record);
   writeStore(requests);
+
+  // Fire-and-forget: append to Google Sheets (never blocks the response)
+  const ip =
+    (req.headers["x-forwarded-for"] as string | undefined)?.split(",")[0]?.trim() ??
+    req.socket.remoteAddress ??
+    "";
+  appendDemoRequestRow({
+    submittedAt: record.requestedAt,
+    firstName,
+    lastName,
+    email,
+    token,
+    expiresAt: record.expiresAt,
+    ip,
+  }).catch((err: unknown) => {
+    req.log.error({ err }, "Google Sheets write failed (non-fatal)");
+  });
 
   const domains = process.env["REPLIT_DOMAINS"]?.split(",")[0];
   const baseUrl = domains ? `https://${domains}` : "https://footprintnavigator.com";
@@ -91,7 +121,7 @@ router.post("/demo-request", async (req, res) => {
 
   const apiKey = process.env["RESEND_API_KEY"];
   if (!apiKey) {
-    req.log.warn("RESEND_API_KEY not set — skipping email, request saved to file");
+    req.log.warn("RESEND_API_KEY not set — skipping email, token saved to file");
     res.json({ success: true });
     return;
   }
@@ -168,7 +198,8 @@ router.get("/demo-access", (req, res) => {
     return;
   }
 
-  const requests = readStore();
+  // Always read fresh from disk to survive server restarts
+  const requests = getStore();
   const idx = requests.findIndex((r) => r.token === token);
 
   if (idx === -1) {
@@ -183,6 +214,7 @@ router.get("/demo-access", (req, res) => {
     return;
   }
 
+  // Mark as accessed and persist immediately
   requests[idx] = { ...record, appAccessed: true };
   writeStore(requests);
 
@@ -201,8 +233,7 @@ router.get("/admin/requests", (req, res) => {
     return;
   }
 
-  const requests = readStore();
-  res.json(requests);
+  res.json(getStore());
 });
 
 export default router;
