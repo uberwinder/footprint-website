@@ -37,16 +37,8 @@ router.post("/demo-request", async (req, res) => {
       appAccessed: false,
     });
   } catch (dbErr: unknown) {
-    const msg = dbErr instanceof Error ? dbErr.message : String(dbErr);
-    const causeMsg =
-      dbErr instanceof Error && (dbErr as { cause?: unknown }).cause != null
-        ? String(
-            ((dbErr as { cause?: { message?: unknown } }).cause as { message?: unknown })
-              ?.message ?? (dbErr as { cause?: unknown }).cause
-          )
-        : undefined;
     req.log.error({ dbErr }, "Failed to insert demo token into database");
-    res.status(500).json({ error: "Database error", detail: msg, cause: causeMsg });
+    res.status(500).json({ error: "Unable to process request. Please try again." });
     return;
   }
 
@@ -178,9 +170,8 @@ router.get("/demo-access", async (req, res) => {
       .where(eq(demoTokensTable.token, token))
       .limit(1);
   } catch (dbErr: unknown) {
-    const msg = dbErr instanceof Error ? dbErr.message : String(dbErr);
     req.log.error({ dbErr }, "Failed to query demo token from database");
-    res.status(500).json({ valid: false, error: "Database error", detail: msg });
+    res.status(500).json({ valid: false, error: "Unable to process request. Please try again." });
     return;
   }
 
@@ -227,9 +218,8 @@ router.get("/admin/requests", async (req, res) => {
       .orderBy(demoTokensTable.createdAt);
     res.json(rows);
   } catch (dbErr: unknown) {
-    const msg = dbErr instanceof Error ? dbErr.message : String(dbErr);
     req.log.error({ dbErr }, "Failed to query demo tokens from database");
-    res.status(500).json({ error: "Database error", detail: msg });
+    res.status(500).json({ error: "Unable to process request. Please try again." });
   }
 });
 
