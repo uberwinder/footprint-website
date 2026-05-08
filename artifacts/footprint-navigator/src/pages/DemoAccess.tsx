@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Link } from "wouter";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import logoSrc from "@assets/FootprintLogo3.19.26_1777917913386.png";
+const logoSrc = "/FootprintLogo.png";
 
 type Status = "loading" | "valid" | "invalid";
 
@@ -27,7 +27,7 @@ export default function DemoAccess() {
       return;
     }
 
-    fetch(`${import.meta.env.BASE_URL}api/demo-access?token=${encodeURIComponent(token)}`)
+    fetch(`https://footprint-api.onrender.com/api/demo-access?token=${encodeURIComponent(token)}`)
       .then((r) => r.json() as Promise<AccessResponse>)
       .then((data) => {
         if (data.valid && data.firstName) {
