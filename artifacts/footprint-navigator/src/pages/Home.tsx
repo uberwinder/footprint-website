@@ -54,7 +54,7 @@ export default function Home() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="text-lg md:text-xl text-muted-foreground max-w-2xl mb-10"
           >
-            Footprint Navigator transforms document chaos into confident decision-making. Find critical information immediately with AI support.
+            Footprint Navigator turns chaos into confidence. Find critical information immediately with AI support.
           </motion.p>
           
           <motion.div 
@@ -74,7 +74,7 @@ export default function Home() {
       </section>
 
       {/* Features Overview */}
-      <section className="w-full py-24 bg-background">
+      <section className="w-full pt-6 pb-24 bg-background">
         <div className="container mx-auto px-4 md:px-8">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <h2 className="text-3xl md:text-5xl font-bold mb-6">Precision software for construction professionals</h2>
@@ -99,16 +99,16 @@ export default function Home() {
               </div>
               <h3 className="text-xl font-bold mb-3">Cross-Document Intelligence</h3>
               <p className="text-muted-foreground leading-relaxed">
-                Automatically surface conflicts, dependencies, and related sections across your entire document library before they become change orders.
+                Automatically identify conflicts, clashes, and inconsistencies across entire projects before they become change orders.
               </p>
             </div>
             <div className="bg-card p-8 rounded-2xl border border-border/50 transition-all hover:border-primary/50">
               <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-6">
                 <Zap className="text-primary" size={24} />
               </div>
-              <h3 className="text-xl font-bold mb-3">RFI Acceleration</h3>
+              <h3 className="text-xl font-bold mb-3">External Actions</h3>
               <p className="text-muted-foreground leading-relaxed">
-                Generate draft RFIs pre-populated with relevant spec sections and drawing references to get answers faster and keep the project moving.
+                Take action anywhere in any software from inside the Navigator app to get answers faster and keep things moving.
               </p>
             </div>
           </div>
