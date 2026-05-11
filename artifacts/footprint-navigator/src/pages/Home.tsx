@@ -8,7 +8,7 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
-      <section className="relative w-full pt-6 pb-6 md:pt-8 md:pb-8 lg:pt-12 lg:pb-12 overflow-hidden bg-background">
+      <section className="relative w-full pt-6 pb-12 md:pt-8 md:pb-16 lg:pt-12 lg:pb-24 overflow-hidden bg-background">
         {/* Abstract blueprint grid background */}
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
         <div className="absolute left-0 right-0 top-0 -z-10 m-auto h-[310px] w-[310px] rounded-full bg-primary opacity-20 blur-[100px]"></div>
