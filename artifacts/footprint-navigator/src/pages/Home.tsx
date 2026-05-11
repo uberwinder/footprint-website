@@ -8,7 +8,7 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
-      <section className="relative w-full pt-6 pb-24 md:pt-8 md:pb-32 lg:pt-12 lg:pb-48 overflow-hidden bg-background">
+      <section className="relative w-full pt-6 pb-6 md:pt-8 md:pb-8 lg:pt-12 lg:pb-12 overflow-hidden bg-background">
         {/* Abstract blueprint grid background */}
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
         <div className="absolute left-0 right-0 top-0 -z-10 m-auto h-[310px] w-[310px] rounded-full bg-primary opacity-20 blur-[100px]"></div>
@@ -74,7 +74,7 @@ export default function Home() {
       </section>
 
       {/* Features Overview */}
-      <section className="w-full pt-6 pb-24 bg-background">
+      <section className="w-full pt-0 mt-0 pb-24 bg-background">
         <div className="container mx-auto px-4 md:px-8">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <h2 className="text-3xl md:text-5xl font-bold mb-6">Precision software for construction professionals</h2>
@@ -90,7 +90,7 @@ export default function Home() {
               </div>
               <h3 className="text-xl font-bold mb-3">AI-Powered Search</h3>
               <p className="text-muted-foreground leading-relaxed">
-                Find any clause, detail, or requirement across thousands of documents in seconds, not hours. Stop flipping through physical binders.
+                Find any clause, detail, or requirement across thousands of documents in seconds, not hours.
               </p>
             </div>
             <div className="bg-card p-8 rounded-2xl border border-border/50 transition-all hover:border-primary/50">
@@ -99,7 +99,7 @@ export default function Home() {
               </div>
               <h3 className="text-xl font-bold mb-3">Cross-Document Intelligence</h3>
               <p className="text-muted-foreground leading-relaxed">
-                Automatically identify conflicts, clashes, and inconsistencies across entire projects before they become change orders.
+                Identify conflicts, clashes, and inconsistencies across entire projects before they become change orders.
               </p>
             </div>
             <div className="bg-card p-8 rounded-2xl border border-border/50 transition-all hover:border-primary/50">
