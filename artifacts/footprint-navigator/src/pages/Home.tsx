@@ -2,13 +2,13 @@ import { motion } from "framer-motion";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { FileSearch, Layers, Zap, Clock, ShieldCheck, CheckCircle2 } from "lucide-react";
-import logoSrc from "@assets/FootprintLogo3.19.26_1777917913386.png";
+const logoSrc = "/FootprintLogo.png";
 
 export default function Home() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
-      <section className="relative w-full py-24 md:py-32 lg:py-48 overflow-hidden bg-background">
+      <section className="relative w-full pt-6 pb-24 md:pt-8 md:pb-32 lg:pt-12 lg:pb-48 overflow-hidden bg-background">
         {/* Abstract blueprint grid background */}
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
         <div className="absolute left-0 right-0 top-0 -z-10 m-auto h-[310px] w-[310px] rounded-full bg-primary opacity-20 blur-[100px]"></div>
