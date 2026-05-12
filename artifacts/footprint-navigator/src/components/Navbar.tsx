@@ -11,9 +11,9 @@ export function Navbar() {
     { href: "/features", label: "Features" },
     { href: "/demo", label: "Demo" },
     { href: "/signup", label: "Signup" },
-    { href: "/contact", label: "Contact" },
-    { href: "/support", label: "Support" },
     { href: "/security", label: "Security" },
+    { href: "/support", label: "Support" },
+    { href: "/contact", label: "Contact" },
   ];
 
   return (
