@@ -10,6 +10,9 @@ export function Footer() {
         <Link href="/contact" style={{ color: "#aaa", textDecoration: "none" }}>
           Contact
         </Link>
+        <Link href="/security" style={{ color: "#aaa", textDecoration: "none" }}>
+          Security
+        </Link>
       </div>
       <div style={{ color: "#666" }}>
         © 2026 Footprint Technologies · info@footprintnavigator.com

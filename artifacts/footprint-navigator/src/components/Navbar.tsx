@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
-import logoSrc from "@assets/FootprintLogo3.19.26_1777917913386.png";
+const logoSrc = "/FootprintLogo.png";
 
 export function Navbar() {
   const [location] = useLocation();
@@ -13,6 +13,7 @@ export function Navbar() {
     { href: "/signup", label: "Signup" },
     { href: "/contact", label: "Contact" },
     { href: "/support", label: "Support" },
+    { href: "/security", label: "Security" },
   ];
 
   return (
