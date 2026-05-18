@@ -16,6 +16,7 @@ import Signup from "@/pages/Signup";
 import Contact from "@/pages/Contact";
 import Support from "@/pages/Support";
 import Security from "@/pages/Security";
+import Nda from "@/pages/Nda";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +35,7 @@ function Router() {
           <Route path="/contact" component={Contact} />
           <Route path="/support" component={Support} />
           <Route path="/security" component={Security} />
+          <Route path="/nda" component={Nda} />
           <Route component={NotFound} />
         </Switch>
       </main>

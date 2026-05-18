@@ -17,13 +17,14 @@ const TRIAL_TAB = "Sheet1";
 const TRIAL_HEADERS = [
   "Timestamp", "Full Name", "Company", "Work Email",
   "Job Role", "Phone Number", "Company Size", "Early Access",
+  "NDA Date", "Sample Docs",
 ];
 
 // ─── 5-minute in-memory cache for trial count ─────────────────────────────────
 let trialCountCache: { count: number; expiresAt: number } | null = null;
 
 // ─── Auth ──────────────────────────────────────────────────────────────────────
-function getAuth(scopes: string[]) {
+function getAuth() {
   const raw = (process.env["GOOGLE_SERVICE_ACCOUNT_KEY"] ?? "").replace(/\\n/g, "\n");
   if (!raw) throw new Error("GOOGLE_SERVICE_ACCOUNT_KEY is not set");
   let privateKey: string;
@@ -33,7 +34,15 @@ function getAuth(scopes: string[]) {
   } catch {
     privateKey = raw;
   }
-  return new google.auth.JWT({ email: SERVICE_ACCOUNT_EMAIL, key: privateKey, scopes });
+  return new google.auth.JWT({
+    email: SERVICE_ACCOUNT_EMAIL,
+    key: privateKey,
+    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+  });
+}
+
+function getSheetsClient() {
+  return google.sheets({ version: "v4", auth: getAuth() });
 }
 
 // ─── Demo Requests helpers ─────────────────────────────────────────────────────
@@ -76,8 +85,7 @@ export async function appendDemoRequestRow(data: {
     logger.warn("GOOGLE_SHEET_ID not set — skipping Sheets write");
     return;
   }
-  const auth = getAuth(["https://www.googleapis.com/auth/spreadsheets"]);
-  const sheets = google.sheets({ version: "v4", auth });
+  const sheets = getSheetsClient();
   await ensureDemoHeaderRow(sheets, DEMO_SHEET_ID);
   await sheets.spreadsheets.values.append({
     spreadsheetId: DEMO_SHEET_ID,
@@ -106,7 +114,7 @@ async function ensureTrialHeaderRow(
     });
     if (meta.data.values?.[0]?.[0] === TRIAL_HEADERS[0]) return;
   } catch {
-    logger.info(`Tab "${TRIAL_TAB}" not found — will write headers anyway`);
+    // proceed to write headers
   }
   await sheets.spreadsheets.values.update({
     spreadsheetId,
@@ -130,8 +138,7 @@ export async function appendTrialCustomerRow(data: {
     logger.warn("TRIAL_CUSTOMERS_SHEET_ID not set — skipping Sheets write");
     return;
   }
-  const auth = getAuth(["https://www.googleapis.com/auth/spreadsheets"]);
-  const sheets = google.sheets({ version: "v4", auth });
+  const sheets = getSheetsClient();
   await ensureTrialHeaderRow(sheets, TRIAL_SHEET_ID);
   await sheets.spreadsheets.values.append({
     spreadsheetId: TRIAL_SHEET_ID,
@@ -143,16 +150,54 @@ export async function appendTrialCustomerRow(data: {
         new Date().toISOString(),
         data.name, data.company, data.email, data.role,
         data.phone || "—", data.companySize, data.earlyAccess,
+        "", // NDA Date — filled later
+        "", // Sample Docs — filled manually
       ]],
     },
   });
-  // Bust the count cache so next fetch is fresh
-  trialCountCache = null;
+  trialCountCache = null; // bust cache
   logger.info({ email: data.email }, "Trial customer appended to Google Sheet");
 }
 
+export async function updateNdaDate(email: string, ndaDate: string): Promise<void> {
+  if (!TRIAL_SHEET_ID) {
+    logger.warn("TRIAL_CUSTOMERS_SHEET_ID not set — skipping NDA date update");
+    return;
+  }
+  const sheets = getSheetsClient();
+
+  // Fetch all emails from column D (Work Email)
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId: TRIAL_SHEET_ID,
+    range: `${TRIAL_TAB}!D:D`,
+  });
+
+  const rows = res.data.values ?? [];
+  // Find the 1-indexed row where email matches (skip header at index 0)
+  let matchRow = -1;
+  for (let i = 1; i < rows.length; i++) {
+    if ((rows[i]?.[0] ?? "").toLowerCase() === email.toLowerCase()) {
+      matchRow = i + 1; // 1-indexed sheet row
+      break;
+    }
+  }
+
+  if (matchRow === -1) {
+    logger.warn({ email }, "Email not found in Trial Customers sheet for NDA update");
+    return;
+  }
+
+  // Column I is NDA Date (index 9 = column I)
+  await sheets.spreadsheets.values.update({
+    spreadsheetId: TRIAL_SHEET_ID,
+    range: `${TRIAL_TAB}!I${matchRow}`,
+    valueInputOption: "RAW",
+    requestBody: { values: [[ndaDate]] },
+  });
+  logger.info({ email, matchRow, ndaDate }, "NDA date updated in Google Sheet");
+}
+
 export async function getTrialCustomerCount(): Promise<number> {
-  // Serve from cache if still valid
   if (trialCountCache && Date.now() < trialCountCache.expiresAt) {
     return trialCountCache.count;
   }
@@ -160,14 +205,13 @@ export async function getTrialCustomerCount(): Promise<number> {
     logger.warn("TRIAL_CUSTOMERS_SHEET_ID not set — returning 0");
     return 0;
   }
-  const auth = getAuth(["https://www.googleapis.com/auth/spreadsheets"]);
-  const sheets = google.sheets({ version: "v4", auth });
+  const sheets = getSheetsClient();
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: TRIAL_SHEET_ID,
     range: `${TRIAL_TAB}!A:A`,
   });
   const totalRows = res.data.values?.length ?? 0;
-  const count = Math.max(0, totalRows - 1); // subtract header row
+  const count = Math.max(0, totalRows - 1);
   trialCountCache = { count, expiresAt: Date.now() + 5 * 60 * 1000 };
   logger.info({ count }, "Trial customer count fetched from Google Sheet");
   return count;
