@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { AnnouncementBanner } from "@/components/AnnouncementBanner";
 
 // Pages
 import Home from "@/pages/Home";
@@ -22,6 +23,7 @@ function Router() {
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground">
       <Navbar />
+      <AnnouncementBanner />
       <main className="flex-1 pt-16">
         <Switch>
           <Route path="/" component={Home} />

@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { motion } from "framer-motion";
-import { CheckCircle2, ChevronRight } from "lucide-react";
+import { CheckCircle2, ChevronDown, ChevronRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -16,11 +16,20 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
+const COMPANY_SIZES = [
+  "1–9 employees",
+  "10–99 employees",
+  "100–999 employees",
+  "1,000+ employees",
+] as const;
+
 const signupSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
   company: z.string().min(2, "Company name is required"),
   role: z.string().min(2, "Role is required"),
+  phone: z.string().optional(),
+  companySize: z.enum(COMPANY_SIZES, { required_error: "Please select a company size" }),
   earlyAccess: z.enum(["yes", "no"], { required_error: "Please select an option" }),
 });
 
@@ -28,6 +37,8 @@ type SignupFormValues = z.infer<typeof signupSchema>;
 
 export default function Signup() {
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
@@ -36,12 +47,34 @@ export default function Signup() {
       email: "",
       company: "",
       role: "",
+      phone: "",
+      companySize: undefined,
       earlyAccess: undefined,
     },
   });
 
-  function onSubmit(data: SignupFormValues) {
-    console.log("Early access request submitted", data);
+  async function onSubmit(data: SignupFormValues) {
+    setSubmitError("");
+    setIsSubmitting(true);
+    try {
+      await fetch("https://footprint-api.onrender.com/api/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: data.name,
+          company: data.company,
+          email: data.email,
+          role: data.role,
+          phone: data.phone ?? "",
+          companySize: data.companySize,
+          earlyAccess: data.earlyAccess === "yes" ? "Yes" : "No",
+        }),
+      });
+    } catch {
+      // Non-fatal — show success regardless so user isn't blocked
+    } finally {
+      setIsSubmitting(false);
+    }
     setIsSuccess(true);
     form.reset();
   }
@@ -73,6 +106,8 @@ export default function Signup() {
         ) : (
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+
+              {/* Row 1: Full Name + Company */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
@@ -102,6 +137,7 @@ export default function Signup() {
                 />
               </div>
 
+              {/* Row 2: Work Email + Job Role */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
@@ -131,6 +167,49 @@ export default function Signup() {
                 />
               </div>
 
+              {/* Row 3: Phone Number + Company Size */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone Number <span className="text-muted-foreground font-normal">(optional)</span></FormLabel>
+                      <FormControl>
+                        <Input type="tel" placeholder="(555) 555-5555" className="bg-background" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="companySize"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Company Size</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <select
+                            value={field.value ?? ""}
+                            onChange={(e) => field.onChange(e.target.value || undefined)}
+                            className="w-full h-10 rounded-md border border-input bg-background px-3 pr-8 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-primary"
+                          >
+                            <option value="" disabled>Select company size</option>
+                            {COMPANY_SIZES.map((s) => (
+                              <option key={s} value={s}>{s}</option>
+                            ))}
+                          </select>
+                          <ChevronDown className="absolute right-2.5 top-2.5 h-4 w-4 text-muted-foreground pointer-events-none" />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Early Access toggle */}
               <FormField
                 control={form.control}
                 name="earlyAccess"
@@ -151,17 +230,9 @@ export default function Signup() {
                             boxShadow: field.value === "yes" ? "0 0 0 1px hsl(var(--primary))" : "none",
                           }}
                         >
-                          <span
-                            className="block font-semibold mb-1 text-sm"
-                            style={{ color: field.value === "yes" ? "hsl(var(--primary))" : "inherit" }}
-                          >
-                            Yes
-                          </span>
-                          <span className="block text-xs text-muted-foreground leading-snug">
-                            I want early access and am happy to provide feedback
-                          </span>
+                          <span className="block font-semibold mb-1 text-sm" style={{ color: field.value === "yes" ? "hsl(var(--primary))" : "inherit" }}>Yes</span>
+                          <span className="block text-xs text-muted-foreground leading-snug">I want early access and am happy to provide feedback</span>
                         </button>
-
                         <button
                           type="button"
                           onClick={() => field.onChange("no")}
@@ -172,15 +243,8 @@ export default function Signup() {
                             boxShadow: field.value === "no" ? "0 0 0 1px hsl(var(--primary))" : "none",
                           }}
                         >
-                          <span
-                            className="block font-semibold mb-1 text-sm"
-                            style={{ color: field.value === "no" ? "hsl(var(--primary))" : "inherit" }}
-                          >
-                            No
-                          </span>
-                          <span className="block text-xs text-muted-foreground leading-snug">
-                            Just notify me when it launches
-                          </span>
+                          <span className="block font-semibold mb-1 text-sm" style={{ color: field.value === "no" ? "hsl(var(--primary))" : "inherit" }}>No</span>
+                          <span className="block text-xs text-muted-foreground leading-snug">Just notify me when it launches</span>
                         </button>
                       </div>
                     </FormControl>
@@ -189,8 +253,10 @@ export default function Signup() {
                 )}
               />
 
-              <Button type="submit" className="w-full h-12 text-base mt-2" data-testid="button-submit-signup">
-                Submit <ChevronRight className="ml-2" size={18} />
+              {submitError && <p className="text-sm text-red-500">{submitError}</p>}
+
+              <Button type="submit" className="w-full h-12 text-base mt-2" disabled={isSubmitting} data-testid="button-submit-signup">
+                {isSubmitting ? "Submitting…" : <>Submit <ChevronRight className="ml-2" size={18} /></>}
               </Button>
             </form>
           </Form>
