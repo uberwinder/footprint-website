@@ -197,6 +197,49 @@ export async function updateNdaDate(email: string, ndaDate: string): Promise<voi
   logger.info({ email, matchRow, ndaDate }, "NDA date updated in Google Sheet");
 }
 
+// ─── Demo token helpers ────────────────────────────────────────────────────────
+
+export async function validateDemoToken(
+  token: string,
+): Promise<{ valid: true; firstName: string } | { valid: false; error: string }> {
+  if (!DEMO_SHEET_ID) {
+    return { valid: false, error: "Demo access unavailable" };
+  }
+  const sheets = getSheetsClient();
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId: DEMO_SHEET_ID,
+    range: `${DEMO_TAB}!A:G`,
+  });
+  const rows = res.data.values ?? [];
+  // Columns: A=Submitted At, B=First Name, C=Last Name, D=Work Email, E=Token, F=Token Expiry, G=IP
+  for (let i = 1; i < rows.length; i++) {
+    const rowToken = (rows[i]?.[4] ?? "") as string;
+    if (rowToken === token) {
+      const expiresAt = new Date((rows[i]?.[5] ?? "") as string);
+      if (isNaN(expiresAt.getTime()) || Date.now() > expiresAt.getTime()) {
+        return { valid: false, error: "This link has expired" };
+      }
+      return { valid: true, firstName: (rows[i]?.[1] ?? "") as string };
+    }
+  }
+  return { valid: false, error: "Invalid or expired link" };
+}
+
+export async function getAllDemoRequests(): Promise<Record<string, string>[]> {
+  if (!DEMO_SHEET_ID) return [];
+  const sheets = getSheetsClient();
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId: DEMO_SHEET_ID,
+    range: `${DEMO_TAB}!A:G`,
+  });
+  const rows = res.data.values ?? [];
+  if (rows.length < 2) return [];
+  const headers = (rows[0] ?? DEMO_HEADERS) as string[];
+  return rows.slice(1).map((row) =>
+    Object.fromEntries(headers.map((h, i) => [h, (row[i] ?? "") as string])),
+  );
+}
+
 export async function getTrialCustomerCount(): Promise<number> {
   if (trialCountCache && Date.now() < trialCountCache.expiresAt) {
     return trialCountCache.count;
