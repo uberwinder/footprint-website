@@ -17,6 +17,7 @@ import Contact from "@/pages/Contact";
 import Support from "@/pages/Support";
 import Security from "@/pages/Security";
 import Nda from "@/pages/Nda";
+import SampleFiles from "@/pages/SampleFiles";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +37,7 @@ function Router() {
           <Route path="/support" component={Support} />
           <Route path="/security" component={Security} />
           <Route path="/nda" component={Nda} />
+          <Route path="/samplefiles" component={SampleFiles} />
           <Route component={NotFound} />
         </Switch>
       </main>

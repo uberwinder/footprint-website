@@ -46,10 +46,13 @@ router.post("/signup", async (req, res) => {
     subject: "Welcome to Footprint Navigator",
     html: `
       <div style="font-family: Arial, sans-serif; background: #000; color: #fff; padding: 40px; max-width: 600px; margin: 0 auto;">
-        <p style="margin: 0 0 32px 0; font-size: 13px; font-weight: 700; letter-spacing: 3px; color: #007BFF; text-transform: uppercase;">FOOTPRINT NAVIGATOR</p>
-        <p style="margin: 0 0 20px 0; font-size: 16px; line-height: 1.6; color: #cccccc;">We are excited to have you tread boldly with us, ${company}.</p>
+        <p style="margin: 0 0 32px 0; font-size: 22px; font-weight: 700; letter-spacing: 3px; color: #007BFF; text-transform: uppercase;">FOOTPRINT NAVIGATOR</p>
+        <p style="margin: 0 0 20px 0; font-size: 16px; line-height: 1.6; color: #cccccc;">Welcome to the inner circle, ${company}.</p>
         <p style="margin: 0 0 20px 0; font-size: 16px; line-height: 1.6; color: #cccccc;">You are now part of a small group helping shape how the construction industry navigates documents. Your feedback directly influences what we build next.</p>
-        <p style="margin: 0 0 28px 0; font-size: 16px; line-height: 1.6; color: #cccccc;">As part of our early access program, please review and sign our confidentiality agreement here: <a href="https://footprintnavigator.com/nda" style="color: #007BFF;">https://footprintnavigator.com/nda</a></p>
+        <p style="margin: 0 0 20px 0; font-size: 16px; line-height: 1.6; color: #cccccc;">As part of our early access program, please review and sign our confidentiality agreement:</p>
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 28px 0;"><tr><td>
+          <a href="https://footprintnavigator.com/nda?email=${encodeURIComponent(email)}" style="display: inline-block; background: #007BFF; color: #ffffff; padding: 14px 28px; border-radius: 6px; text-decoration: none; font-size: 15px; font-weight: 700;">Review and Sign Agreement</a>
+        </td></tr></table>
         <p style="margin: 0 0 28px 0; font-size: 16px; line-height: 1.6; color: #cccccc;">Reply to this email with any questions. We look forward to working with you.</p>
         <p style="margin: 0 0 32px 0; font-size: 16px; line-height: 1.6; color: #cccccc;">The Footprint Team</p>
         <hr style="border: none; border-top: 1px solid #333; margin: 32px 0;" />

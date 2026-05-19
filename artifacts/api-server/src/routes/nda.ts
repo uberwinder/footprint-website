@@ -72,17 +72,12 @@ async function fetchDancingScriptTtf(): Promise<ArrayBuffer | null> {
 
 const NDA_SECTIONS = [
   {
-    heading: "FOOTPRINT TECHNOLOGIES",
-    subheading: "CONFIDENTIALITY ACKNOWLEDGMENT",
-    body: null,
-  },
-  {
     heading: "1. PURPOSE",
-    body: "The Company is providing Recipient with access to proprietary software, product information, technical data, and business information related to Footprint Navigator, an AI-powered document navigation platform developed for the construction industry (the \"Purpose\"). In connection with the Purpose, the Company may disclose Confidential Information as defined below.",
+    body: 'The Company is providing Recipient with access to proprietary software, product information, technical data, and business information related to Footprint Navigator, an AI-powered document navigation platform developed for the construction industry (the "Purpose"). In connection with the Purpose, the Company may disclose Confidential Information as defined below.',
   },
   {
     heading: "2. DEFINITION OF CONFIDENTIAL INFORMATION",
-    body: "\"Confidential Information\" means any and all information or data that has or could have commercial value or other utility in the business in which Company is engaged, including but not limited to: software source code, product designs, algorithms, technical specifications, user interfaces, business strategies, customer data, financial projections, research and development activities, and any other information the Company designates as confidential or that, under the circumstances of disclosure, would reasonably be understood to be confidential.",
+    body: '"Confidential Information" means any and all information or data that has or could have commercial value or other utility in the business in which Company is engaged, including but not limited to: software source code, product designs, algorithms, technical specifications, user interfaces, business strategies, customer data, financial projections, research and development activities, and any other information the Company designates as confidential or that, under the circumstances of disclosure, would reasonably be understood to be confidential.',
   },
   {
     heading: "3. OBLIGATIONS OF RECIPIENT",
@@ -144,6 +139,7 @@ async function buildSignedPdf(data: {
   const margin = 72;
   const pageW = 612;
   const pageH = 792;
+  const contentW = pageW - margin * 2;
 
   let page = doc.addPage([pageW, pageH]);
   let y = pageH - margin;
@@ -157,7 +153,16 @@ async function buildSignedPdf(data: {
     if (y - needed < margin + 40) newPage();
   }
 
-  function wrapText(text: string, font: PDFFont, size: number, maxW: number): string[] {
+  // Properly wraps text and tracks y for every line drawn
+  function drawWrapped(
+    text: string,
+    font: PDFFont,
+    size: number,
+    lineH: number,
+    color = rgb(0, 0, 0),
+    indent = 0,
+  ) {
+    const maxW = contentW - indent;
     const words = text.split(" ");
     const lines: string[] = [];
     let current = "";
@@ -171,11 +176,7 @@ async function buildSignedPdf(data: {
       }
     }
     if (current) lines.push(current);
-    return lines;
-  }
 
-  function drawWrapped(text: string, font: PDFFont, size: number, lineH: number, color = rgb(0, 0, 0), indent = 0) {
-    const lines = wrapText(text, font, size, pageW - margin * 2 - indent);
     for (const line of lines) {
       checkY(size + 4);
       page.drawText(line, { x: margin + indent, y, font, size, color });
@@ -200,7 +201,6 @@ async function buildSignedPdf(data: {
 
   // ── NDA sections ─────────────────────────────────────────────────────────
   for (const section of NDA_SECTIONS) {
-    if (!section.body) continue;
     checkY(40);
     drawWrapped(section.heading, helveticaBold, 10, 14);
     y -= 2;
@@ -209,73 +209,72 @@ async function buildSignedPdf(data: {
   }
 
   // ── Signature block ──────────────────────────────────────────────────────
-  checkY(200);
+  checkY(260);
   y -= 8;
   page.drawLine({
     start: { x: margin, y }, end: { x: pageW - margin, y },
     thickness: 0.5, color: rgb(0.7, 0.7, 0.7),
   });
   y -= 20;
-  page.drawText("By signing below, the Recipient agrees to be legally bound by the terms of this Confidentiality Acknowledgment.", {
-    x: margin, y, font: helvetica, size: 9.5, color: rgb(0.3, 0.3, 0.3),
-    maxWidth: pageW - margin * 2,
-  });
-  y -= 28;
 
-  // Signature (Dancing Script / bold)
+  // Acknowledgment line — use drawWrapped so y tracks every line correctly
+  drawWrapped(
+    "By signing below, the Recipient agrees to be legally bound by the terms of this Confidentiality Acknowledgment.",
+    helvetica, 9.5, 14, rgb(0.3, 0.3, 0.3),
+  );
+  y -= 16;
+
+  // ── Signature fields ──────────────────────────────────────────────────────
+  // sigField: draws label + value + underline. Does NOT use maxWidth so pdf-lib
+  // never wraps the value text (which would shift content down without y tracking).
+  // Values are assumed to be single-line; long values clip at the line edge naturally.
   const labelX = margin;
-  const labelX2 = margin + 300;
+  const labelX2 = margin + 310;
 
-  function sigField(label: string, value: string, x: number, lineW: number, font: PDFFont, fontSize: number, valueColor = rgb(0, 0, 0)) {
+  function sigField(
+    label: string,
+    value: string,
+    x: number,
+    lineW: number,
+    font: PDFFont,
+    fontSize: number,
+  ) {
+    // Label (small, muted) — drawn at y + labelOffset, no y change
     page.drawText(label, { x, y: y + 2, font: helvetica, size: 8, color: rgb(0.5, 0.5, 0.5) });
-    y -= 4;
-    page.drawText(value, { x, y, font, size: fontSize, color: valueColor, maxWidth: lineW - 8 });
-    y -= 4;
+    // Value — drawn at y, single line, no maxWidth to avoid pdf-lib auto-wrap
+    page.drawText(value, { x, y: y - 6, font, size: fontSize, color: rgb(0, 0, 0) });
+    // Underline at a fixed offset below the value baseline
     page.drawLine({
-      start: { x, y }, end: { x: x + lineW, y },
+      start: { x, y: y - 14 }, end: { x: x + lineW, y: y - 14 },
       thickness: 0.6, color: rgb(0.4, 0.4, 0.4),
     });
-    y -= 16;
   }
 
+  const rowH = 38; // vertical space each row consumes
+
   // Row 1: Signature (full width)
-  const sigFontSize = ttfBytes ? 26 : 14;
-  page.drawText("Signature", { x: labelX, y: y + 2, font: helvetica, size: 8, color: rgb(0.5, 0.5, 0.5) });
-  y -= 4;
-  page.drawText(data.signatureText, {
-    x: labelX, y, font: sigFont, size: sigFontSize,
-    color: rgb(0, 0, 0), maxWidth: pageW - margin * 2,
-  });
-  y -= 4;
-  page.drawLine({
-    start: { x: margin, y }, end: { x: pageW - margin, y },
-    thickness: 0.6, color: rgb(0.4, 0.4, 0.4),
-  });
-  y -= 20;
+  const sigFontSize = ttfBytes ? 24 : 14;
+  sigField("Signature", data.signatureText, labelX, contentW, sigFont, sigFontSize);
+  y -= rowH + (ttfBytes ? 10 : 0); // extra space for larger cursive signature
 
-  // Row 2: Name | Company
-  const halfW = (pageW - margin * 2 - 20) / 2;
-  const savedY = y;
+  // Row 2: Name | Company (two columns)
+  const halfW = (contentW - 20) / 2;
   sigField("Name", data.signerName, labelX, halfW, helvetica, 11);
-  const afterLeft = y;
-  y = savedY;
   sigField("Company", data.company, labelX2, halfW, helvetica, 11);
-  y = Math.min(afterLeft, y);
+  y -= rowH;
 
-  // Row 3: Title | Date
-  const savedY2 = y;
+  // Row 3: Title | Date (two columns)
   sigField("Title", data.title || "—", labelX, halfW, helvetica, 11);
-  const afterLeft2 = y;
-  y = savedY2;
   sigField("Date", data.signedDate, labelX2, halfW, helvetica, 11);
-  y = Math.min(afterLeft2, y);
+  y -= rowH;
 
   // Row 4: Email (full width)
-  sigField("Email", data.email, labelX, pageW - margin * 2, helvetica, 10);
+  sigField("Email", data.email, labelX, contentW, helvetica, 10);
+  y -= rowH;
 
   // Footer
   y -= 8;
-  page.drawText(`Footprint Technologies  ·  info@footprintnavigator.com  ·  footprintnavigator.com`, {
+  page.drawText("Footprint Technologies  ·  info@footprintnavigator.com  ·  footprintnavigator.com", {
     x: margin, y, font: helvetica, size: 8, color: rgb(0.6, 0.6, 0.6),
   });
 
@@ -348,6 +347,7 @@ router.post("/nda-sign", async (req, res) => {
 
   const resend = new Resend(apiKey);
   const pdfBase64 = Buffer.from(pdfBytes).toString("base64");
+  const uploadUrl = `https://footprintnavigator.com/samplefiles?email=${encodeURIComponent(email.trim())}`;
 
   // Email to signer
   resend.emails.send({
@@ -356,11 +356,14 @@ router.post("/nda-sign", async (req, res) => {
     subject: "Your Signed Confidentiality Agreement - Footprint Technologies",
     html: `
       <div style="font-family: Arial, sans-serif; background: #000; color: #fff; padding: 40px; max-width: 600px; margin: 0 auto;">
-        <p style="margin: 0 0 28px 0; font-size: 13px; font-weight: 700; letter-spacing: 3px; color: #007BFF; text-transform: uppercase;">FOOTPRINT TECHNOLOGIES</p>
+        <p style="margin: 0 0 28px 0; font-size: 22px; font-weight: 700; letter-spacing: 3px; color: #007BFF; text-transform: uppercase;">FOOTPRINT TECHNOLOGIES</p>
         <p style="font-size: 16px; line-height: 1.6; color: #ccc; margin: 0 0 16px 0;">Hi ${signerName},</p>
         <p style="font-size: 16px; line-height: 1.6; color: #ccc; margin: 0 0 16px 0;">Your signed Confidentiality Acknowledgment is attached to this email for your records.</p>
-        <p style="font-size: 14px; color: #888; margin: 0 0 32px 0;">Signed: ${signedDate}</p>
-        <p style="font-size: 16px; line-height: 1.6; color: #ccc; margin: 0 0 32px 0;">Reply to this email with any questions.</p>
+        <p style="font-size: 14px; color: #888; margin: 0 0 28px 0;">Signed: ${signedDate}</p>
+        <p style="font-size: 16px; line-height: 1.6; color: #ccc; margin: 0 0 16px 0;">To help us build features specific to your workflow, please upload a sample project file here:</p>
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 32px 0;"><tr><td>
+          <a href="${uploadUrl}" style="display: inline-block; background: #007BFF; color: #ffffff; padding: 14px 28px; border-radius: 6px; text-decoration: none; font-size: 15px; font-weight: 700;">Upload Sample Files</a>
+        </td></tr></table>
         <hr style="border: none; border-top: 1px solid #333; margin: 0 0 24px 0;" />
         <p style="font-size: 12px; color: #666; margin: 0;">Footprint Technologies &middot; info@footprintnavigator.com</p>
       </div>
