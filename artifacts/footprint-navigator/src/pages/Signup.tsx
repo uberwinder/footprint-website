@@ -100,7 +100,7 @@ export default function Signup() {
               <CheckCircle2 className="text-primary" size={32} />
             </div>
             <p className="text-xl font-semibold" style={{ color: "hsl(var(--primary))" }}>
-              Thank you! We will be in touch before the July 1st launch.
+              Welcome to the team. Check your email for next steps.
             </p>
           </motion.div>
         ) : (
