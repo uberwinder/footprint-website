@@ -113,7 +113,7 @@ export default function Demo() {
             <div className="mb-10">
               <h1 className="text-3xl font-bold mb-4">Request Demo Access</h1>
               <p className="text-muted-foreground leading-relaxed">
-                Footprint Navigator launches July 1, 2026. Request access below and we'll send you a personal demo link instantly.
+                Footprint Navigator is now available in limited beta. Request access below and we'll send you a personal demo link instantly.
               </p>
             </div>
 

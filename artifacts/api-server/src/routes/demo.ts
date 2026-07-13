@@ -82,7 +82,7 @@ router.post("/demo-request", async (req, res) => {
         <div style="font-family: Montserrat, Arial, sans-serif; background: #000000; color: #ffffff; padding: 40px; max-width: 600px; margin: 0 auto;">
           <p style="margin: 0 0 32px 0; font-size: 16px; font-weight: 700; letter-spacing: 3px; color: #007BFF; text-transform: uppercase;">FOOTPRINT NAVIGATOR</p>
           <h1 style="margin: 0 0 16px 0; font-size: 28px; font-weight: 700; color: #ffffff; line-height: 1.2;">Tread boldly, ${firstName}.</h1>
-          <p style="margin: 0 0 28px 0; font-size: 16px; line-height: 1.6; color: #cccccc;">Your demo access to Footprint Navigator is ready. Launching July 1, 2026 — early users who help us test may receive free access and lifetime discounts.</p>
+          <p style="margin: 0 0 28px 0; font-size: 16px; line-height: 1.6; color: #cccccc;">Your demo access to Footprint Navigator is ready. Now in limited beta — early users who help us test may receive free access and lifetime discounts.</p>
           <a href="${demoLink}" style="display: inline-block; background: #007BFF; color: #ffffff; padding: 14px 32px; border-radius: 6px; text-decoration: none; font-size: 16px; font-weight: 700; margin-bottom: 28px;">Launch Demo</a>
           <p style="margin: 0 0 0 0; font-size: 13px; color: #888888;">This link expires in 7 days. Do not share it.</p>
           <hr style="border: none; border-top: 1px solid #333333; margin: 32px 0;" />

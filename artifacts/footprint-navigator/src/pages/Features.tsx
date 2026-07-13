@@ -135,9 +135,9 @@ export default function Features() {
 
           {/* Early Adopter Banner */}
           <div className="bg-[#1a1a1a] border border-primary rounded-2xl p-8 mb-6" data-testid="card-early-adopter">
-            <p className="text-xl font-bold mb-3">🚀 Launching July 1, 2026</p>
+            <p className="text-xl font-bold mb-3">Now in Limited Beta</p>
             <p className="text-muted-foreground leading-relaxed mb-6">
-              Be part of something from the ground up. Early users who help us test and improve Footprint Navigator get free access and significant discounts locked in for life. If you sign up before launch and help us debug, we take care of you.
+              Be part of something from the ground up. Early users who help us test and improve Footprint Navigator get free access and significant discounts locked in for life. If you join the beta and help us improve it, we take care of you.
             </p>
             <Button variant="outline" className="border-primary text-primary hover:bg-primary/10" asChild data-testid="button-early-access-contact">
               <Link href="/contact">Contact Us to Get Early Access</Link>

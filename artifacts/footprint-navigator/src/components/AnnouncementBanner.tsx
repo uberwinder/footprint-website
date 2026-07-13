@@ -31,7 +31,7 @@ export function AnnouncementBanner() {
       }}
     >
       <p style={{ margin: 0, fontSize: "13px", color: "#ffffff", textAlign: "center", lineHeight: 1.4 }}>
-        Users who help us improve Navigator get free pre-launch access and lifetime discounts.{" "}
+        Users who join the beta get free access and lifetime discounts.{" "}
         <a
           href="https://footprintnavigator.com/signup"
           style={{ color: "#007BFF", textDecoration: "underline" }}

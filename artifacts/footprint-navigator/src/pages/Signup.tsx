@@ -86,7 +86,7 @@ export default function Signup() {
         <div className="mb-10">
           <h1 className="text-3xl font-bold mb-4">Request Early Access</h1>
           <p className="text-muted-foreground leading-relaxed">
-            Footprint Navigator launches July 1, 2026. Sign up now to get early access, help shape the product, and lock in lifetime discounts.
+            Footprint Navigator is now in limited beta testing. Sign up to get access, help shape the product, and lock in lifetime discounts.
           </p>
         </div>
 

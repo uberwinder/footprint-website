@@ -405,7 +405,7 @@ const SECTIONS: SectionDef[] = [
     content: (
       <div>
         <p className="text-muted-foreground mb-4 leading-relaxed">
-          Footprint Navigator is currently in pre-launch demo. We're being transparent about what's still in development:
+          Footprint Navigator is currently in limited beta testing. We're being transparent about what's still in development:
         </p>
         <ul className="space-y-3 text-muted-foreground leading-relaxed pl-2">
           <Li>The <span className="text-white font-medium">Count tool</span> is visible in the toolbar but not yet functional</Li>
