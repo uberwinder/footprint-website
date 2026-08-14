@@ -144,6 +144,34 @@ router.get("/demo-access", async (req, res) => {
   }
 });
 
+// Server-to-server demo token validation for the Navigator product backend.
+// Reuses the exact same validateDemoToken() source of truth as /demo-access.
+// Read-only: does not consume or mutate the token.
+router.post("/demo/validate", async (req, res) => {
+  const token = (req.body as { token?: unknown } | undefined)?.token;
+
+  // Missing or malformed input → 400. Tokens are issued as 64-char hex;
+  // accept a slightly wider well-formed shape without leaking format details.
+  if (typeof token !== "string" || !/^[a-zA-Z0-9]{16,512}$/.test(token)) {
+    res.status(400).json({ valid: false });
+    return;
+  }
+
+  try {
+    const result = await validateDemoToken(token);
+    if (result.valid) {
+      res.json({ valid: true });
+    } else {
+      // Generic response: no distinction between unknown and expired,
+      // no PII, no storage details.
+      res.status(401).json({ valid: false });
+    }
+  } catch (err) {
+    req.log.error({ err }, "Demo token validation failed");
+    res.status(500).json({ valid: false });
+  }
+});
+
 router.get("/admin/requests", async (req, res) => {
   const key = req.query["key"] as string | undefined;
 
