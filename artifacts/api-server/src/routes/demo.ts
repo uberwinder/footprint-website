@@ -180,10 +180,10 @@ router.post("/demo/validate", async (req, res) => {
 
 router.get("/admin/requests", async (req, res) => {
   const adminKey = process.env.ADMIN_KEY;
-  const key = req.query["key"] as string | undefined;
+  const key = req.query["key"];
 
   // Fail closed: if ADMIN_KEY is not configured, nobody gets in.
-  if (!adminKey || !key || !timingSafeEqualStr(key, adminKey)) {
+  if (!adminKey || typeof key !== "string" || !timingSafeEqualStr(key, adminKey)) {
     res.status(401).json({ error: "Unauthorized" });
     return;
   }

@@ -68,6 +68,15 @@ describe("GET /api/admin/requests", () => {
     expect(mockGetAll).toHaveBeenCalled();
   });
 
+  it("returns a clean 401 for a repeated key query parameter (array, not string)", async () => {
+    process.env.ADMIN_KEY = "correct-test-key";
+    const res = await request(app).get(
+      "/api/admin/requests?key=correct-test-key&key=correct-test-key",
+    );
+    expect(res.status).toBe(401);
+    expect(mockGetAll).not.toHaveBeenCalled();
+  });
+
   it("does not leak the configured key in error responses", async () => {
     process.env.ADMIN_KEY = "correct-test-key";
     const res = await request(app).get("/api/admin/requests?key=nope");
