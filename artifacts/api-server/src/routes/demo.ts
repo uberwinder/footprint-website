@@ -5,7 +5,13 @@ import { appendDemoRequestRow, validateDemoToken, getAllDemoRequests } from "../
 
 const router: IRouter = Router();
 
-const ADMIN_KEY = "FootprintAdmin2026";
+function timingSafeEqualStr(a: string, b: string): boolean {
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) return false;
+  return crypto.timingSafeEqual(bufA, bufB);
+}
+
 
 router.post("/demo-request", async (req, res) => {
   const { firstName, lastName, email } = req.body as {
@@ -173,9 +179,11 @@ router.post("/demo/validate", async (req, res) => {
 });
 
 router.get("/admin/requests", async (req, res) => {
+  const adminKey = process.env.ADMIN_KEY;
   const key = req.query["key"] as string | undefined;
 
-  if (key !== ADMIN_KEY) {
+  // Fail closed: if ADMIN_KEY is not configured, nobody gets in.
+  if (!adminKey || !key || !timingSafeEqualStr(key, adminKey)) {
     res.status(401).json({ error: "Unauthorized" });
     return;
   }
