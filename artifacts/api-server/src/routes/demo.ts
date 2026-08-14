@@ -136,7 +136,7 @@ router.get("/demo-access", async (req, res) => {
     res.json({
       valid: true,
       firstName: result.firstName,
-      appUrl: "https://footprint-app-30jy.onrender.com",
+      appUrl: `https://app.footprintnavigator.com/?demo=1&token=${encodeURIComponent(token)}`,
     });
   } catch (err) {
     req.log.error({ err }, "Failed to validate demo token");

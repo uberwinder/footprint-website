@@ -34,7 +34,7 @@ export default function DemoAccess() {
           setFirstName(data.firstName);
           setStatus("valid");
           setTimeout(() => {
-            window.location.href = data.appUrl ?? "https://footprintnavigator.com/app";
+            window.location.href = data.appUrl ?? "https://app.footprintnavigator.com";
           }, 2000);
         } else {
           setStatus("invalid");

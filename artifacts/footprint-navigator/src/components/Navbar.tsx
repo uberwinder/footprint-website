@@ -43,6 +43,13 @@ export function Navbar() {
               {link.label}
             </Link>
           ))}
+          <a
+            href="https://app.footprintnavigator.com"
+            className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+            data-testid="link-nav-login"
+          >
+            Login
+          </a>
         </div>
 
         {/* Mobile Toggle */}
@@ -70,6 +77,14 @@ export function Navbar() {
               {link.label}
             </Link>
           ))}
+          <a
+            href="https://app.footprintnavigator.com"
+            className="block text-sm font-medium text-muted-foreground hover:text-primary"
+            onClick={() => setIsMobileMenuOpen(false)}
+            data-testid="link-mobile-nav-login"
+          >
+            Login
+          </a>
         </div>
       )}
     </nav>

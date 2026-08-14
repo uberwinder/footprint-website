@@ -31,7 +31,7 @@ app.use(
       const allowed = [
         "https://footprintnavigator.com",
         "https://www.footprintnavigator.com",
-        "https://footprint-app-30jy.onrender.com",
+        "https://app.footprintnavigator.com",
       ];
       if (
         !origin ||
